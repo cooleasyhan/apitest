@@ -1,0 +1,20 @@
+[[source]]
+url = "http://pypi.douban.com/simple"
+verify_ssl = false
+name = "pypi"
+
+[dev-packages]
+pylint = "*"
+"autopep8" = "*"
+rope = "*"
+coverage = "*"
+coveralls = "*"
+
+[packages]
+django = "*"
+celery = "*"
+locust = "*"
+django-suit = "*"
+
+[requires]
+python_version = "3.6"
