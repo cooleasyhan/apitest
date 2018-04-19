@@ -120,3 +120,10 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/2.0/howto/static-files/
 
 STATIC_URL = '/static/'
+
+try:
+    import whitenoise
+    WHITENOISE_MIDDLEWARE = ['whitenoise.middleware.WhiteNoiseMiddleware', ]
+    MIDDLEWARE = WHITENOISE_MIDDLEWARE + MIDDLEWARE
+except ImportError
+    pass

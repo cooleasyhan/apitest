@@ -15,3 +15,5 @@ site/
 .env
 db.sqlite3
 .coveralls.yml
+fabfile.py
+setup.py
