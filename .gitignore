@@ -17,3 +17,4 @@ db.sqlite3
 .coveralls.yml
 fabfile.py
 setup.py
+settings_prod.py

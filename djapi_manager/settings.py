@@ -121,9 +121,3 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 
-try:
-    import whitenoise
-    WHITENOISE_MIDDLEWARE = ['whitenoise.middleware.WhiteNoiseMiddleware', ]
-    MIDDLEWARE = WHITENOISE_MIDDLEWARE + MIDDLEWARE
-except ImportError
-    pass
