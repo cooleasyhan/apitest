@@ -1,13 +1,20 @@
 from django.contrib import admin
 from .models import *
-
+from django.http import response 
+import time
 
 @admin.register(Project)
 class ProjectAdmin(admin.ModelAdmin):
-    list_display = ('__str__',)
+    list_display = ('pk','__str__',)
     list_filter = ()
     search_fields = ()
 
+    actions = ['start_locust']
+    def start_locust(self, request, queryset):
+        for obj in queryset:
+            n = obj.start_locust()
+        time.sleep(0.5)
+        return response.HttpResponseRedirect(redirect_to='http://127.0.0.1:%s/' % n)
 
 class DataFieldAdmin(admin.TabularInline):
     suit_classes = 'suit-tab suit-tab-data'

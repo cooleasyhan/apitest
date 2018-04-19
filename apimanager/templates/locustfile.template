@@ -1,0 +1,32 @@
+#coding: utf-8
+from locust import HttpLocust, TaskSet, task
+
+import os
+import sys
+
+
+class WebPageTasks(TaskSet):
+    def on_start(self):
+        import os
+        import sys
+        sys.path.insert(0, '{{ base_dir }}')
+        os.environ.setdefault("DJANGO_SETTINGS_MODULE",
+                              "{{ default_django_settings_module }}")
+        import django
+        django.setup()
+        from apimanager.models import RestApiTestCase
+        self.apis = [obj for obj in RestApiTestCase.objects.filter(
+            project__name=self.locust.project_name)]
+
+    @task
+    def test_specified_scenario(self):
+        for api in self.apis:
+            api.run_locust(self.client)
+
+
+class WebPageUser(HttpLocust):
+    host = "{{ host }}"
+    task_set = WebPageTasks
+    min_wait = {{ min_wait }}
+    max_wait = {{ max_wait }}
+    project_name = "{{ project_name }}"
