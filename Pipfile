@@ -15,6 +15,7 @@ django = "*"
 celery = "*"
 locust = "*"
 django-suit = "*"
+mysqlclient = "*"
 
 [requires]
 python_version = "3.6"
