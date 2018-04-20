@@ -77,11 +77,14 @@ class Project(models.Model):
 class RestApiTestCase(models.Model):
     name = models.CharField(blank=False, max_length=100)
     project = models.ForeignKey(Project, on_delete=True)
-    url = models.URLField(blank=False, max_length=2000)
+    url = models.CharField(blank=False, max_length=2000)
     method = models.CharField(max_length=20,
                               choices=(('GET', 'GET'), ('POST', 'POST'), ('OPTION', 'OPTION')))
     data_type = models.CharField(max_length=200, choices=(
         ('DATA', 'DATA'), ('JSON', 'JSON')), default='JSON')
+
+    response_data_type = models.CharField(max_length=200, choices=(
+        ('DATA', 'DATA'), ('JSON', 'JSON')), default='JSON') 
     last_run_time = models.DateTimeField(blank=True, null=True)
     successed = models.BooleanField(default=False)
     last_run_result = models.TextField(blank=True, null=True)
@@ -118,6 +121,13 @@ class RestApiTestCase(models.Model):
         return tmp
 
     @property
+    def real_url(self):
+        if not self.url.startswith('http'):
+            return self.project.host + self.url
+        else:
+            return self.url
+
+    @property
     def data_disp(self):
         return json.dumps(self.data)
 
@@ -134,12 +144,15 @@ class RestApiTestCase(models.Model):
     def run_test(self):
         if self.data_type == 'JSON':
             rst = requests.request(
-                url=self.url, method=self.method, json=self.data)
+                url=self.real_url, method=self.method, json=self.data)
         else:
             rst = requests.request(
-                url=self.url, method=self.method, data=self.data)
+                url=self.real_url, method=self.method, data=self.data)
 
-        self.result = rst.json()
+        if self.response_data_type == 'JSON':
+            self.result = rst.json()
+        else:
+            self.result = rst.text()
 
         self.last_run_status_code = rst.status_code
         self.last_run_result = rst.text

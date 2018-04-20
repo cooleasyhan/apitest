@@ -14,7 +14,7 @@ class ProjectAdmin(admin.ModelAdmin):
         for obj in queryset:
             n = obj.start_locust()
         time.sleep(0.5)
-        return response.HttpResponseRedirect(redirect_to='http://127.0.0.1:%s/' % n)
+        return response.HttpResponseRedirect(redirect_to='http://%s:%s/' % (request.META['HTTP_HOST'].split(':')[0] ,n))
 
 class DataFieldAdmin(admin.TabularInline):
     suit_classes = 'suit-tab suit-tab-data'
@@ -33,7 +33,7 @@ class ValidateAdmin(admin.TabularInline):
 
 @admin.register(RestApiTestCase)
 class RestApiTestCaseAdmin(admin.ModelAdmin):
-    list_display = ('project', 'url', 'headers_disp',
+    list_display = ('project', 'real_url', 'headers_disp',
                     'data_disp', 'validate_disp', 'successed', 'last_run_result')
     list_filter = ()
     search_fields = ()
