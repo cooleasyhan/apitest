@@ -4,21 +4,7 @@ from apitest.utils import import_string
 from functools import wraps
 from apitest.response import TestCaseResponse, ResponseObject
 from apitest.logger import log_debug
-
-# def response_for_exception(request, exc):
-#     return ExceptionResponse(request, exc)
-
-
-# def convert_exception_to_response(get_response):
-
-#     # @wraps(get_response)
-#     def inner(request):
-#         try:
-#             response = get_response(request)
-#         except Exception as exc:
-#             response = response_for_exception(request, exc)
-#         return response
-#     return inner
+import time
 
 
 class BaseHandler:
@@ -45,8 +31,10 @@ class BaseHandler:
         # raise Exception('test')
 
         log_debug('Send %s ' % str(request.prepare()))
+        start = time.time()
         rst = requests_obj.request(
             **request.prepare())
+        rst.meta_data = {'duration': time.time() - start}
 
         return ResponseObject(rst)
 

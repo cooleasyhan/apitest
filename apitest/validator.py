@@ -17,6 +17,7 @@ class Validator(object):
             str(field), str(comparator), str(expect_value))
 
         self.result = None
+        self._check_value = None
 
     def __str__(self):
         return self.name + ' - ' + str(self.result)
@@ -35,6 +36,7 @@ class Validator(object):
     def check(self, check_value):
 
         try:
+            self._check_value = check_value
             self._method(check_value=self.field_type(check_value))
 
             log_debug('check_value %s comparator %s expect_value %s, True' %
@@ -47,3 +49,10 @@ class Validator(object):
                       (str(check_value), self.comparator, str(self.expect_value)))
             self.result = False
             return False
+
+    def to_dict(self):
+        tmp = {'field': self.field, 'field_type': str(self.field_type),
+               'comparator': self.comparator, 'expect_value': self.expect_value, 'result': self.result,
+               'check_value': self._check_value
+               }
+        return tmp

@@ -178,6 +178,8 @@ class RestApiTestCase(models.Model):
         log_debug('Validation Result: %s' % str(rst.validators))
         self.save()
 
+        return rst
+
     def run_locust(self, client):
         request = self.to_testapi_request(client=client)
         request.validators = []
@@ -220,3 +222,4 @@ class Validate(models.Model):
 
     def to_validator(self):
         return Validator(field=self.field_name, comparator=self.comparator, expect_value=self.expected, field_type=self.data_type)
+
