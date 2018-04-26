@@ -123,3 +123,11 @@ STATIC_URL = '/static/'
 
 
 LOCUST_FILE_ROOT = 'apimanager/locustfiles'
+
+
+from apitest.logger import setup_logger
+
+if DEBUG:
+    setup_logger('DEBUG')
+else:
+    setup_logger('INFO')

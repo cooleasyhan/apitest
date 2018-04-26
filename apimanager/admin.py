@@ -34,7 +34,9 @@ class ValidateAdmin(admin.TabularInline):
 @admin.register(RestApiTestCase)
 class RestApiTestCaseAdmin(admin.ModelAdmin):
     list_display = ('project', 'real_url', 'headers_disp',
-                    'data_disp', 'validate_disp', 'successed', 'last_run_result')
+                    # 'data_disp', 'validate_disp',
+                    #  'successed', 
+                     'last_run_result')
     list_filter = ()
     search_fields = ()
     inlines = [DataFieldAdmin, HeaderFieldAdmin, ValidateAdmin]

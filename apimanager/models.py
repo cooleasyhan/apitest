@@ -3,18 +3,27 @@ import copy
 import datetime
 import json
 import os
+import signal
+from multiprocessing import Process, managers, Manager, current_process
+
+from subprocess import Popen, call, TimeoutExpired
+
 import requests
+from django.conf import settings
 # Create your models here.
 from django.contrib.auth.models import User
 from django.db import models
 from django.forms import model_to_dict
-from jinja2 import Template
 from django.template import loader
-from django.conf import settings
-from .func import g
-from multiprocessing import Process
-from subprocess import Popen
-import signal
+from jinja2 import Template
+
+from .comparator import comparators
+
+from apitest.validator import Validator
+from apitest.request import TestCaseRequest
+from apitest.dataformat import TCDataCell
+from apitest.handler import BaseHandler
+from apitest.logger import log_debug
 
 
 class Project(models.Model):
@@ -24,7 +33,7 @@ class Project(models.Model):
     min_wait = models.IntegerField(default=1000)
     max_wait = models.IntegerField(default=5000)
 
-    _processes = {}
+    _processes = dict()
 
     def __str__(self):
         return '-'.join([self.name if self.name else ''])
@@ -48,28 +57,23 @@ class Project(models.Model):
         return full_path
 
     def start_locust(self):
-        def start(f, timeout):
-            print(f, timeout)
-            with Popen('locust -f %s -P %s' % (f, 9000 + self.pk), shell=True) as p:
-                try:
-                    return p.wait(timeout=timeout)
-                except:
-                    p.send_signal(signal.SIGINT)
-                    try:
-                        return p.wait(timeout=5)
-                    except:
-                        print('timeout=')
-                        p.kill()
-                        p.wait()
-                        raise
+        def start(f, timeout, manager):
 
-        if self.name not in Project._processes.keys():
-            f = self.to_locustfile()
+            call('locust -f %s -P %s' %
+                 (f, 9000 + self.pk), shell=True, timeout=60)
 
-            p = Process(target=start, args=(f, 300))
-            p.daemon = True
-            p.start()
-            Project._processes[self.name] = p
+        if self.name in Project._processes.keys():
+            p = Project._processes[self.name]
+
+            if p.is_alive():
+                return 9000 + self.pk
+
+        f = self.to_locustfile()
+
+        p = Process(target=start, args=(f, 300, Project._processes))
+        p.daemon = True
+        p.start()
+        Project._processes[self.name] = p
 
         return 9000 + self.pk
 
@@ -84,17 +88,25 @@ class RestApiTestCase(models.Model):
         ('DATA', 'DATA'), ('JSON', 'JSON')), default='JSON')
 
     response_data_type = models.CharField(max_length=200, choices=(
-        ('DATA', 'DATA'), ('JSON', 'JSON')), default='JSON') 
+        ('DATA', 'DATA'), ('JSON', 'JSON')), default='JSON')
     last_run_time = models.DateTimeField(blank=True, null=True)
-    successed = models.BooleanField(default=False)
+    # successed = models.BooleanField(default=False)
     last_run_result = models.TextField(blank=True, null=True)
     last_run_status_code = models.IntegerField(blank=True, null=True)
 
+    def to_testapi_request(self, client=None):
+        if hasattr(self, '_tc_request', ):
+            return self._tc_request
+
+        self._tc_request = TestCaseRequest(name=self.name, attr1=self.project.name, method=self.method, url=self.real_url,
+                                           headers=self.headers, files=None, data=self.data, json=self.json, validators=self.validators, client=client)
+        return self._tc_request
+
     @property
     def headers(self):
-        tmp = {}
+        tmp = []
         for header in HeaderField.objects.filter(tc=self):
-            tmp[header.name] = tmp[header.value]
+            tmp.append(header.to_tc_cell())
 
         return tmp
 
@@ -104,21 +116,25 @@ class RestApiTestCase(models.Model):
 
     @property
     def data(self):
-        tmp = {}
-        fields = DataField.objects.filter(tc=self)
-        for f in fields:
-            if f.data_type != 'jinja2':
-                _func = getattr(builtins, f.data_type)
-                tmp[f.name] = _func(f.value)
+        if self.data_type == 'DATA':
+            tmp = []
+            for field in DataField.objects.filter(tc=self):
+                tmp.append(field.to_tc_cell())
 
-        for f in fields:
-            if f.data_type == 'jinja2':
-                template = Template(f.value)
-                context = copy.copy(g)
-                context.update(tmp)
-                tmp[f.name] = template.render(context)
+            return tmp
+        else:
+            return None
 
-        return tmp
+    @property
+    def json(self):
+        if self.data_type == 'JSON':
+            tmp = []
+            for field in DataField.objects.filter(tc=self):
+                tmp.append(field.to_tc_cell())
+
+            return tmp
+        else:
+            return None
 
     @property
     def real_url(self):
@@ -127,48 +143,47 @@ class RestApiTestCase(models.Model):
         else:
             return self.url
 
+    # @property
+    # def data_disp(self):
+    #     return json.dumps(self.data)
+
+    # def validate_disp(self):
+    #     return [str(v) for v in Validate.objects.filter(tc=self)]
+
     @property
-    def data_disp(self):
-        return json.dumps(self.data)
+    def validators(self):
 
-    def validate_disp(self):
-        return [str(v) for v in Validate.objects.filter(tc=self)]
+        return [v.to_validator() for v in Validate.objects.filter(tc=self)]
 
-    def validate(self):
-        for v in Validate.objects.filter(tc=self):
-            if not v.validate(self.result):
-                return False
-
-        return True
+    # @property
+    # def validate_result(self):
+    #     tmp = []
+    #     for v in Validate.objects.filter(tc=self):
+    #         successed, value, expected_value, comparator = v.validate(
+    #             self.result)
 
     def run_test(self):
-        if self.data_type == 'JSON':
-            rst = requests.request(
-                url=self.real_url, method=self.method, json=self.data)
-        else:
-            rst = requests.request(
-                url=self.real_url, method=self.method, data=self.data)
+        request = self.to_testapi_request()
+        handler = BaseHandler()
 
-        if self.response_data_type == 'JSON':
-            self.result = rst.json()
-        else:
-            self.result = rst.text()
+        handler.load_middleware()
 
-        self.last_run_status_code = rst.status_code
-        self.last_run_result = rst.text
+        rst = handler.get_response(request)
 
-        self.successed = True if self.validate() else False
-
+        # self.successed = True if self.validate() else False
+        self.last_run_status_code = rst.extract_field('status_code')
         self.last_run_time = datetime.datetime.now()
+        self.last_run_result = rst.resp_text
+        log_debug('Validation Result: %s' % str(rst.validator_success))
+        log_debug('Validation Result: %s' % str(rst.validators))
         self.save()
 
     def run_locust(self, client):
-        if self.data_type == 'JSON':
-            rst = client.request(
-                url=self.url, method=self.method, json=self.data)
-        else:
-            rst = client.request(
-                url=self.url, method=self.method, data=self.data)
+        request = self.to_testapi_request(client=client)
+        request.validators = []
+        handler = BaseHandler()
+        handler.load_middleware()
+        rst = handler.get_response(request)
 
 
 class DataField(models.Model):
@@ -178,18 +193,24 @@ class DataField(models.Model):
         ('int', 'int'), ('str', 'string'), ('boolean', 'boolean'), ('float', 'float'), ('jinja2', 'jinja2')))
     value = models.CharField(max_length=2000, blank=True, null=True)
 
+    def to_tc_cell(self):
+        return TCDataCell(name=self.name, value=self.value, data_type=self.data_type)
+
 
 class HeaderField(models.Model):
     tc = models.ForeignKey(RestApiTestCase, on_delete=True)
     name = models.CharField(max_length=200)
     value = models.CharField(max_length=2000, blank=True, null=True)
 
+    def to_tc_cell(self):
+        return TCDataCell(name=self.name, value=self.value)
+
 
 class Validate(models.Model):
     tc = models.ForeignKey(RestApiTestCase, on_delete=True)
     field_name = models.CharField(max_length=200)
     comparator = models.CharField(
-        max_length=20, choices=(('eq', 'eq'), ('exists', 'exists')))
+        max_length=50, choices=comparators)
     data_type = models.CharField(max_length=20, choices=(
         ('int', 'int'), ('str', 'string'), ('boolean', 'boolean'), ('float', 'float')))
     expected = models.CharField(max_length=2000)
@@ -197,27 +218,5 @@ class Validate(models.Model):
     def __str__(self):
         return '%s %s %s' % (self.field_name, self.comparator, self.expected)
 
-    def validate(self, data):
-        try:
-            value = data
-            for field in self.field_name.split('/'):
-                value = data[field]
-            if self.comparator == 'exists':
-                return True
-
-        except KeyError:
-            if self.comparator == 'not_exists':
-                return True
-            raise
-
-        func = getattr(builtins, self.data_type)
-        value = func(value)
-        expected_value = func(self.expected)
-        if self.comparator == 'eq':
-
-            if value == expected_value:
-                return True
-            else:
-                print(value, expected_value)
-
-        return False
+    def to_validator(self):
+        return Validator(field=self.field_name, comparator=self.comparator, expect_value=self.expected, field_type=self.data_type)
