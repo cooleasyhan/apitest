@@ -136,6 +136,6 @@ else:
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
-        'apimanager.auth.ExampleAuthentication',
+        'apimanager.auth.TokenAuthentication',
     )
 }

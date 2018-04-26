@@ -16,15 +16,11 @@ def cal_token(*args):
     return key
 
 
-class ExampleAuthentication(authentication.BaseAuthentication):
+class   TokenAuthentication(authentication.BaseAuthentication):
     def authenticate(self, request):
         if request.method == 'GET':
             return
 
-        # if settings.DEBUG:
-        #     return
-        print(request.data)
-        print('++++++', request.META)
         username = request.META.get('HTTP_X_USERNAME')
         token = request.META.get('HTTP_X_TOKEN')
         unix_time = request.META.get('HTTP_X_UNIX_TIME', 0)
@@ -37,21 +33,20 @@ class ExampleAuthentication(authentication.BaseAuthentication):
             except:
                 raise exceptions.AuthenticationFailed('Token Auth Failed')
 
-        print(username, token, unix_time)
         if abs(float(unix_time) - time.time()) > 60:
             raise exceptions.AuthenticationFailed('Token Auth Failed')
 
         try:
-            user=User.objects.get(username=username)
+            user = User.objects.get(username=username)
         except User.DoesNotExist:
             raise exceptions.AuthenticationFailed('Token Auth Failed')
 
         try:
-            private_key=Token.objects.get(user=user).key
+            private_key = Token.objects.get(user=user).key
         except Token.DoesNotExist:
             raise exceptions.AuthenticationFailed('Token Auth Failed')
 
-        check_token=cal_token(username, unix_time, private_key)
+        check_token = cal_token(username, unix_time, private_key)
 
         if check_token != token:
             raise exceptions.AuthenticationFailed('Token Auth Failed')
