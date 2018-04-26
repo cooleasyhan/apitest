@@ -25,7 +25,7 @@ SECRET_KEY = 'dbxg9_ia&f91*nf@%p3!7hh3m3j9)8x(+b%^h=7l)4i0f91@#^'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['127.0.0.1']
 
 
 # Application definition
@@ -39,7 +39,8 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'apimanager',
-    'rest_framework'
+    'rest_framework',
+    'rest_framework.authtoken'
 ]
 
 MIDDLEWARE = [
@@ -132,3 +133,9 @@ if DEBUG:
     setup_logger('DEBUG')
 else:
     setup_logger('INFO')
+
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'apimanager.auth.ExampleAuthentication',
+    )
+}

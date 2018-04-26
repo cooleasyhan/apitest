@@ -42,3 +42,5 @@ class BaseHandler:
         response = self._middleware_chain(request)
         log_debug('Response: %s' % str(response.parsed_dict()))
         return response
+
+from requests.api import request 

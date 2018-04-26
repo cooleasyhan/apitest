@@ -3,7 +3,7 @@ import os
 from importlib import import_module
 from importlib.util import find_spec as importlib_find
 from requests.structures import CaseInsensitiveDict
-
+from . import exception
 def import_string(dotted_path):
     """
     Import a dotted module path and return the attribute/class designated by the

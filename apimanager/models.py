@@ -4,26 +4,28 @@ import datetime
 import json
 import os
 import signal
-from multiprocessing import Process, managers, Manager, current_process
-
-from subprocess import Popen, call, TimeoutExpired
-
+from multiprocessing import Manager, Process, current_process, managers
+from subprocess import Popen, TimeoutExpired, call
+from django.utils import timezone
 import requests
 from django.conf import settings
 # Create your models here.
 from django.contrib.auth.models import User
 from django.db import models
+from django.db.models.signals import post_save
+from django.dispatch import receiver
 from django.forms import model_to_dict
 from django.template import loader
 from jinja2 import Template
+from rest_framework.authtoken.models import Token
 
-from .comparator import comparators
-
-from apitest.validator import Validator
-from apitest.request import TestCaseRequest
 from apitest.dataformat import TCDataCell
 from apitest.handler import BaseHandler
 from apitest.logger import log_debug
+from apitest.request import TestCaseRequest
+from apitest.validator import Validator
+
+from .comparator import comparators
 
 
 class Project(models.Model):
@@ -167,12 +169,13 @@ class RestApiTestCase(models.Model):
         handler = BaseHandler()
 
         handler.load_middleware()
-
+        # try:
         rst = handler.get_response(request)
+        
 
         # self.successed = True if self.validate() else False
         self.last_run_status_code = rst.extract_field('status_code')
-        self.last_run_time = datetime.datetime.now()
+        self.last_run_time = timezone.now()
         self.last_run_result = rst.resp_text
         log_debug('Validation Result: %s' % str(rst.validator_success))
         log_debug('Validation Result: %s' % str(rst.validators))
@@ -187,8 +190,7 @@ class RestApiTestCase(models.Model):
         handler.load_middleware()
         rst = handler.get_response(request)
 
-
-class DataField(models.Model):
+class Field(models.Model):
     tc = models.ForeignKey(RestApiTestCase, on_delete=True)
     name = models.CharField(max_length=200)
     data_type = models.CharField(max_length=20, choices=(
@@ -198,15 +200,14 @@ class DataField(models.Model):
     def to_tc_cell(self):
         return TCDataCell(name=self.name, value=self.value, data_type=self.data_type)
 
+    class Meta():
+        abstract = True
 
-class HeaderField(models.Model):
-    tc = models.ForeignKey(RestApiTestCase, on_delete=True)
-    name = models.CharField(max_length=200)
-    value = models.CharField(max_length=2000, blank=True, null=True)
+class DataField(Field):
+    pass
 
-    def to_tc_cell(self):
-        return TCDataCell(name=self.name, value=self.value)
-
+class HeaderField(Field):
+    pass
 
 class Validate(models.Model):
     tc = models.ForeignKey(RestApiTestCase, on_delete=True)
@@ -223,3 +224,8 @@ class Validate(models.Model):
     def to_validator(self):
         return Validator(field=self.field_name, comparator=self.comparator, expect_value=self.expected, field_type=self.data_type)
 
+
+@receiver(post_save, sender=settings.AUTH_USER_MODEL)
+def create_auth_token(sender, instance=None, created=False, **kwargs):
+    if created:
+        Token.objects.create(user=instance)

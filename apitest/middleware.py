@@ -7,6 +7,7 @@ from requests.sessions import *
 from apitest.dataformat import TCDataCell, TCDataFormatHandler
 from .logger import log_debug
 
+
 class MiddlewareMixin:
     def __init__(self, get_response=None):
         self.get_response = get_response
@@ -46,7 +47,6 @@ class TCDataFormatMiddleware(MiddlewareMixin):
 
 class ValidatorMiddleware(MiddlewareMixin):
 
-
     def process_response(self, request, response):
         log_debug('Validators: %s' % str(request.validators))
         if not hasattr(request, 'validators') or not isinstance(response, TestCaseResponse):
@@ -54,8 +54,11 @@ class ValidatorMiddleware(MiddlewareMixin):
 
         tmp = True
         for v in request.validators:
-            check_value = response.extract_field(v.field)
-            if not v.check(check_value):
+            check_value = response.extract_field(
+                v.field, raise_exception=False)
+            if check_value is None:
+                tmp = False
+            elif not v.check(check_value):
                 tmp = False
 
         response.validators = request.validators

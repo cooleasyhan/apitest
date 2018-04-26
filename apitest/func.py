@@ -20,4 +20,4 @@ def token(*args):
     return key
 
 
-g = {'builtins__md5': md5, 'builtins__unix_time': unix_time, 'builtins__token': token}
+g = {'md5': md5, 'unix_time': unix_time, 'token': token}

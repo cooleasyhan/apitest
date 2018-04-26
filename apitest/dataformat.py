@@ -29,9 +29,11 @@ class TCDataFormatHandler(object):
         for cell in arr:
             if cell.data_type == 'jinja2':
                 template = jinja2.Template(cell.value)
-                context = copy.copy(g)
-                context.update(tmp)
+                context = {'f': copy.copy(g)}
+                context['v']= tmp
                 tmp[cell.name] = template.render(context)
+        
+        tmp =   { key:value for key, value in  tmp.items() if not key.startswith('_') }
+        log_debug('handler tc data format %s' % tmp)
 
-        log_debug('handler tc data format %s' % tmp) 
         return tmp

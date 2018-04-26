@@ -39,3 +39,9 @@ class APITestView(APIView):
         rst = run_test(tests)
 
         return Response(rst)
+
+
+class AuthView(APIView):
+    def post(self, request, format=None): 
+        return Response({"status":"ok"})
+    

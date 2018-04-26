@@ -100,7 +100,7 @@ class ResponseObject(object):
             logger.log_error(err_msg)
             raise exception.ParamsError(err_msg)
 
-    def extract_field(self, field):
+    def extract_field(self, field, raise_exception=True):
         """ extract value from requests.Response.
         """
         msg = "extract field: {}".format(field)
@@ -115,11 +115,14 @@ class ResponseObject(object):
             logger.log_debug(msg)
         except exception.ParseResponseError:
             logger.log_error("failed to extract field: {}".format(field))
-            raise
+            if raise_exception:
+                raise
+            else:
+                return None
 
         return value
 
-    def extract_response(self, extractors):
+    def extract_response(self, extractors, raise_exception=True):
         """ extract value from requests.Response and store in OrderedDict.
         @param (list) extractors
             [
@@ -141,7 +144,7 @@ class ResponseObject(object):
             if not isinstance(field, basestring):
                 raise exception.ParamsError("invalid extractors in testcase!")
 
-            extracted_variables_mapping[key] = self.extract_field(field)
+            extracted_variables_mapping[key] = self.extract_field(field,raise_exception)
 
         return extracted_variables_mapping
 
