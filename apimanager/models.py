@@ -174,7 +174,7 @@ class RestApiTestCase(models.Model):
         
 
         # self.successed = True if self.validate() else False
-        self.last_run_status_code = rst.extract_field('status_code')
+        self.last_run_status_code = rst.extract_field('status_code', raise_exception=False) or 500
         self.last_run_time = timezone.now()
         self.last_run_result = rst.resp_text
         log_debug('Validation Result: %s' % str(rst.validator_success))

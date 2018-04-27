@@ -156,5 +156,12 @@ class ExceptionResponse(ResponseObject):
         self.resp_obj.request = request
         self.resp_text = str(sys.exc_info())
         self.resp_body = self.resp_text
+    
+    def parsed_dict(self):
+        return {
+            'status_code': 500,
+            'headers': {},
+            'body': self.resp_body
+        }
 
 TestCaseResponse = ResponseObject 
