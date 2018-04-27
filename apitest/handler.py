@@ -1,10 +1,13 @@
-import requests
-from apitest.middleware import MIDDLEWARES
-from apitest.utils import import_string
-from functools import wraps
-from apitest.response import TestCaseResponse, ResponseObject
-from apitest.logger import log_debug
 import time
+from functools import wraps
+
+import requests
+from requests.api import request
+
+from apitest.logger import log_debug
+from apitest.middleware import MIDDLEWARES
+from apitest.response import ResponseObject, TestCaseResponse, ExceptionResponse
+from apitest.utils import import_string
 
 
 class BaseHandler:
@@ -39,8 +42,9 @@ class BaseHandler:
         return ResponseObject(rst)
 
     def get_response(self, request):
-        response = self._middleware_chain(request)
-        log_debug('Response: %s' % str(response.parsed_dict()))
-        return response
-
-from requests.api import request 
+        try:
+            response = self._middleware_chain(request)
+            log_debug('Response: %s' % str(response.parsed_dict()))
+            return response
+        except Exception as e:
+            return ExceptionResponse(request, e)

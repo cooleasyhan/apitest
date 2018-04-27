@@ -149,12 +149,12 @@ class ResponseObject(object):
         return extracted_variables_mapping
 
 
-# class ExceptionResponse(ResponseObject):
-#     def __init__(self, request, e):
-#         # self.request = request
-#         self.resp_obj = e
-#         self.resp_obj.request = request
-#         self.resp_text = str(sys.exc_info())
-#         self.resp_body = self.resp_text
+class ExceptionResponse(ResponseObject):
+    def __init__(self, request, e):
+        # self.request = request
+        self.resp_obj = e
+        self.resp_obj.request = request
+        self.resp_text = str(sys.exc_info())
+        self.resp_body = self.resp_text
 
 TestCaseResponse = ResponseObject 
