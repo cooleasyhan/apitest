@@ -61,7 +61,7 @@ class Project(models.Model):
     def start_locust(self):
         def start(f, timeout, manager):
 
-            call('locust -f %s -P %s' %
+            call('locust --web-host=0.0.0.0 -f %s -P %s' %
                  (f, 9000 + self.pk), shell=True, timeout=60)
 
         if self.name in Project._processes.keys():
