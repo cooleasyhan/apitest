@@ -33,7 +33,13 @@ class   TokenAuthentication(authentication.BaseAuthentication):
             except:
                 raise exceptions.AuthenticationFailed('Token Auth Failed')
 
-        if abs(float(unix_time) - time.time()) > 60:
+        if not username or not token or not unix_time:
+            raise exceptions.AuthenticationFailed('Token Auth Failed')
+
+        try:
+            if abs(float(unix_time) - time.time()) > 60:
+                raise exceptions.AuthenticationFailed('Token Auth Failed')
+        except TypeError:
             raise exceptions.AuthenticationFailed('Token Auth Failed')
 
         try:
