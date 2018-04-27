@@ -12,7 +12,7 @@ try:
 except AttributeError:
     JSONDecodeError = ValueError
 
-class MyBaseError(BaseException):
+class MyBaseError(Exception):
     pass
 
 class FileFormatError(MyBaseError):

@@ -113,7 +113,7 @@ class ResponseObject(object):
 
             msg += "\t=> {}".format(value)
             logger.log_debug(msg)
-        except exception.ParseResponseError:
+        except exception.ParamsError:
             logger.log_error("failed to extract field: {}".format(field))
             if raise_exception:
                 raise

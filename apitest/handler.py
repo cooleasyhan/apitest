@@ -9,12 +9,22 @@ from apitest.middleware import MIDDLEWARES
 from apitest.response import ResponseObject, TestCaseResponse, ExceptionResponse
 from apitest.utils import import_string
 
+def convert_exception_to_response(get_response):
+
+    @wraps(get_response)
+    def inner(request):
+        try:
+            response = get_response(request)
+        except Exception as exc:
+            response = ExceptionResponse(request, exc)
+        return response
+    return inner
 
 class BaseHandler:
 
     def load_middleware(self):
         self._exception_middleware = []
-        handler = self._get_response
+        handler = convert_exception_to_response(self._get_response)
         for middleware_path in MIDDLEWARES:
             middleware = import_string(middleware_path)
             mw_instance = middleware(handler)
@@ -22,7 +32,7 @@ class BaseHandler:
             if hasattr(mw_instance, 'process_exception'):
                 self._exception_middleware.append(
                     mw_instance.process_exception)
-            handler = mw_instance
+            handler = convert_exception_to_response(mw_instance)
 
         self._middleware_chain = handler
 
@@ -42,9 +52,9 @@ class BaseHandler:
         return ResponseObject(rst)
 
     def get_response(self, request):
-        try:
-            response = self._middleware_chain(request)
-            log_debug('Response: %s' % str(response.parsed_dict()))
-            return response
-        except Exception as e:
-            return ExceptionResponse(request, e)
+        # try:
+        response = self._middleware_chain(request)
+        log_debug('Response: %s' % str(response.parsed_dict()))
+        return response
+        # except Exception as e:
+        #     return ExceptionResponse(request, e)
