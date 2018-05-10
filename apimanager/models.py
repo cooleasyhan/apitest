@@ -27,6 +27,16 @@ from apitest.validator import Validator
 
 from .comparator import comparators
 
+def lazy_property(fun):
+    attr_name = "_lazy_" + fun.__name__
+
+    @property
+    def _lazy_property(self):
+        if not hasattr(self, attr_name):
+            setattr(self, attr_name, fun(self))
+        return getattr(self, attr_name)
+    
+    return _lazy_property
 
 class Project(models.Model):
     name = models.CharField(blank=False, max_length=100, verbose_name='项目名称')
@@ -96,16 +106,16 @@ class RestApiTestCase(models.Model):
     last_run_result = models.TextField(blank=True, null=True)
     last_run_status_code = models.IntegerField(blank=True, null=True)
 
-    def to_testapi_request(self, client=None):
-        if hasattr(self, '_tc_request', ):
-            return self._tc_request
+    def to_testapi_request(self, client=None, for_batch=False):
 
         self._tc_request = TestCaseRequest(name=self.name, attr1=self.project.name, method=self.method, url=self.real_url,
                                            headers=self.headers, files=None, data=self.data, json=self.json, validators=self.validators, client=client)
+        
         return self._tc_request
 
-    @property
+    @lazy_property
     def headers(self):
+        print('----------------')
         tmp = []
         for header in HeaderField.objects.filter(tc=self):
             tmp.append(header.to_tc_cell())
@@ -116,8 +126,9 @@ class RestApiTestCase(models.Model):
     def headers_disp(self):
         return json.dumps(self.headers)
 
-    @property
+    @lazy_property
     def data(self):
+        print('----------------')
         if self.data_type == 'DATA':
             tmp = []
             for field in DataField.objects.filter(tc=self):
@@ -127,8 +138,9 @@ class RestApiTestCase(models.Model):
         else:
             return None
 
-    @property
+    @lazy_property
     def json(self):
+        print('----------------')
         if self.data_type == 'JSON':
             tmp = []
             for field in DataField.objects.filter(tc=self):
@@ -152,9 +164,9 @@ class RestApiTestCase(models.Model):
     # def validate_disp(self):
     #     return [str(v) for v in Validate.objects.filter(tc=self)]
 
-    @property
+    @lazy_property
     def validators(self):
-
+        print('----------------')
         return [v.to_validator() for v in Validate.objects.filter(tc=self)]
 
     # @property
