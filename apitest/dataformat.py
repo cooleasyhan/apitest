@@ -29,7 +29,7 @@ class TCDataFormatHandler(object):
         for cell in arr:
             if cell.data_type not in ('jinja2', 'json'):
                 _func = getattr(builtins, cell.data_type)
-                tmp[cell.name] = _func(cell.value)
+                tmp[cell.name] = _func(cell.value) if cell.value else None
 
         for cell in arr:
             if cell.data_type in ('jinja2', 'json'):
