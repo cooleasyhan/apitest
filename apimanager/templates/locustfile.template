@@ -15,7 +15,7 @@ class WebPageTasks(TaskSet):
         import django
         django.setup()
         from apitest.logger import setup_logger
-        setup_logger('debug')
+        setup_logger('critical')
         from apimanager.models import RestApiTestCase
         self.apis = [obj for obj in RestApiTestCase.objects.filter(
             project__name=self.locust.project_name)]

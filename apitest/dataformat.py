@@ -40,7 +40,6 @@ class TCDataFormatHandler(object):
 
         for cell in arr:
             if cell.data_type == 'json':
-                print(tmp[cell.name])
                 tmp[cell.name] = json.loads(tmp[cell.name])
                 
 
