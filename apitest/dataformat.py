@@ -1,9 +1,14 @@
 import builtins
-import jinja2
-from collections import OrderedDict
-from .logger import log_debug
 import copy
-from .func import g 
+import json
+from collections import OrderedDict
+
+import jinja2
+
+from .func import g
+from .logger import log_debug
+
+
 class TCDataCell(object):
 
     def __init__(self, name, value, data_type='str'):
@@ -22,18 +27,25 @@ class TCDataFormatHandler(object):
         # log_debug('handler tc data format')
         tmp = OrderedDict()
         for cell in arr:
-            if cell.data_type != 'jinja2':
+            if cell.data_type not in ('jinja2', 'json'):
                 _func = getattr(builtins, cell.data_type)
                 tmp[cell.name] = _func(cell.value)
 
         for cell in arr:
-            if cell.data_type == 'jinja2':
+            if cell.data_type in ('jinja2', 'json'):
                 template = jinja2.Template(cell.value)
                 context = {'f': copy.copy(g)}
-                context['v']= tmp
+                context['v'] = tmp
                 tmp[cell.name] = template.render(context)
-        
-        tmp =   { key:value for key, value in  tmp.items() if not key.startswith('_') }
+
+        for cell in arr:
+            if cell.data_type == 'json':
+                print(tmp[cell.name])
+                tmp[cell.name] = json.loads(tmp[cell.name])
+                
+
+
+        tmp = {key: value for key, value in tmp.items() if not key.startswith('_')}
         log_debug('handler tc data format %s' % tmp)
 
         return tmp

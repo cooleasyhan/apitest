@@ -194,7 +194,7 @@ class Field(models.Model):
     tc = models.ForeignKey(RestApiTestCase, on_delete=True)
     name = models.CharField(max_length=200)
     data_type = models.CharField(max_length=20, choices=(
-        ('int', 'int'), ('str', 'string'), ('boolean', 'boolean'), ('float', 'float'), ('jinja2', 'jinja2')))
+        ('int', 'int'), ('str', 'string'), ('boolean', 'boolean'), ('float', 'float'), ('jinja2', 'jinja2'), ('json','json')))
     value = models.CharField(max_length=2000, blank=True, null=True)
 
     def to_tc_cell(self):

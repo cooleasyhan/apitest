@@ -13,7 +13,7 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='datafield',
             name='data_type',
-            field=models.CharField(choices=[('int', 'int'), ('str', 'string'), ('boolean', 'boolean'), ('float', 'float'), ('jinja2', 'jinja2')], max_length=20),
+            field=models.CharField(choices=[('int', 'int'), ('str', 'string'), ('boolean', 'boolean'), ('float', 'float'), ('jinja2', 'jinja2'), ('json','json')], max_length=20),
         ),
         migrations.AlterField(
             model_name='restapitestcase',
