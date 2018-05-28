@@ -1,3 +1,6 @@
+{% load obj_print %}
+
+
 <head>
   <meta content="text/html; charset=utf-8" http-equiv="content-type" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -226,7 +229,7 @@
                     <tr>
                       <th>body</th>
                       <td>
-                        <pre>{{ record.meta_data.request_body | safe }}</pre>
+                        <pre>{{ record.meta_data.request_body | dict_format |safe  }}</pre>
                       </td>
                     </tr>
 
@@ -258,7 +261,7 @@
                       <td>
                         {% if record.meta_data.response_data_type == "image" %}
                         <img src="{{ record.meta_data.response_body }}" /> {% else %}
-                        <pre>{{ record.meta_data.response_body | safe }}</pre> {% endif %}
+                        <pre>{{ record.meta_data.response_body |  dict_format | safe }}</pre> {% endif %}
                       </td>
                     </tr>
                   </table>

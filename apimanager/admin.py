@@ -12,7 +12,7 @@ TokenAdmin.raw_id_fields = ('user',)
 
 @admin.register(Project)
 class ProjectAdmin(admin.ModelAdmin):
-    list_display = ('pk', '__str__',)
+    list_display = ('pk', '__str__','host')
     list_filter = ()
     search_fields = ()
 
@@ -42,7 +42,7 @@ class ValidateAdmin(admin.TabularInline):
 
 @admin.register(RestApiTestCase)
 class RestApiTestCaseAdmin(admin.ModelAdmin):
-    list_display = ('project', 'real_url', 
+    list_display = ('name', 'project', 'real_url', 
                     # 'data_disp', 'validate_disp',
                     #  'successed',
                     'last_run_result')
