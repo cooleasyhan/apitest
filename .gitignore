@@ -18,3 +18,4 @@ db.sqlite3
 fabfile.py
 setup.py
 settings_prod.py
+.pytest_cache

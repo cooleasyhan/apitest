@@ -4,7 +4,6 @@ from base64 import b64decode, b64encode
 from builtins import *
 from hashlib import md5
 
-from Crypto import Random
 from Crypto.Cipher import AES
 
 # Padding for the input string --not
@@ -17,6 +16,7 @@ def pad(s):
         _s = s.encode('utf-8')
     else:
         _s = s
+
     return s + (BLOCK_SIZE - len(_s) % BLOCK_SIZE) * \
         chr(BLOCK_SIZE - len(_s) % BLOCK_SIZE)
 
@@ -24,17 +24,27 @@ def pad(s):
 def unpad(s): return s[:-ord(s[len(s) - 1:])]
 
 
-def aes_cbc_encrypt(key, iv, raw):
+def _aes_cbc_encrypt(key, iv, raw):
     raw = pad(raw)
     cipher = AES.new(key, AES.MODE_CBC, iv)
     return b64encode(cipher.encrypt(raw.encode('utf-8')))
 
 
-def aes_cbc_decrypt(key, iv, enc):
+def _aes_cbc_decrypt(key, iv, enc):
     enc = b64decode(enc)
     cipher = AES.new(key, AES.MODE_CBC, iv)
     x = unpad(cipher.decrypt(enc))
     return x.decode('utf8')
+
+
+def aes_cbc_encrypt(key, iv, raw):
+    bs = _aes_cbc_encrypt(key, iv, raw)
+    return bs.decode('utf-8')
+
+
+def aes_cbc_decrypt(key, iv, enc):
+    enc = enc.encode('utf-8')
+    return _aes_cbc_decrypt(key, iv, enc)
 
 
 def md5(x):
