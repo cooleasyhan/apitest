@@ -27,6 +27,7 @@ from apitest.validator import Validator
 
 from .comparator import comparators
 
+
 def lazy_property(fun):
     attr_name = "_lazy_" + fun.__name__
 
@@ -35,8 +36,9 @@ def lazy_property(fun):
         if not hasattr(self, attr_name):
             setattr(self, attr_name, fun(self))
         return getattr(self, attr_name)
-    
+
     return _lazy_property
+
 
 class Project(models.Model):
     name = models.CharField(blank=False, max_length=100, verbose_name='项目名称')
@@ -110,12 +112,11 @@ class RestApiTestCase(models.Model):
 
         self._tc_request = TestCaseRequest(name=self.name, attr1=self.project.name, method=self.method, url=self.real_url,
                                            headers=self.headers, files=None, data=self.data, json=self.json, validators=self.validators, client=client)
-        
+
         return self._tc_request
 
     @lazy_property
     def headers(self):
-        print('----------------')
         tmp = []
         for header in HeaderField.objects.filter(tc=self):
             tmp.append(header.to_tc_cell())
@@ -128,7 +129,6 @@ class RestApiTestCase(models.Model):
 
     @lazy_property
     def data(self):
-        print('----------------')
         if self.data_type == 'DATA':
             tmp = []
             for field in DataField.objects.filter(tc=self):
@@ -140,7 +140,6 @@ class RestApiTestCase(models.Model):
 
     @lazy_property
     def json(self):
-        print('----------------')
         if self.data_type == 'JSON':
             tmp = []
             for field in DataField.objects.filter(tc=self):
@@ -166,7 +165,6 @@ class RestApiTestCase(models.Model):
 
     @lazy_property
     def validators(self):
-        print('----------------')
         return [v.to_validator() for v in Validate.objects.filter(tc=self)]
 
     # @property
@@ -183,10 +181,10 @@ class RestApiTestCase(models.Model):
         handler.load_middleware()
         # try:
         rst = handler.get_response(request)
-        
 
         # self.successed = True if self.validate() else False
-        self.last_run_status_code = rst.extract_field('status_code', raise_exception=False) or 500
+        self.last_run_status_code = rst.extract_field(
+            'status_code', raise_exception=False) or 500
         self.last_run_time = timezone.now()
         self.last_run_result = rst.resp_text
         log_debug('Validation Result: %s' % str(rst.validator_success))
@@ -202,11 +200,12 @@ class RestApiTestCase(models.Model):
         handler.load_middleware()
         rst = handler.get_response(request)
 
+
 class Field(models.Model):
     tc = models.ForeignKey(RestApiTestCase, on_delete=True)
     name = models.CharField(max_length=200)
     data_type = models.CharField(max_length=20, choices=(
-        ('int', 'int'), ('str', 'string'), ('boolean', 'boolean'), ('float', 'float'), ('jinja2', 'jinja2'), ('json','json')))
+        ('int', 'int'), ('str', 'string'), ('boolean', 'boolean'), ('float', 'float'), ('jinja2', 'jinja2'), ('json', 'json')))
     value = models.CharField(max_length=2000, blank=True, null=True)
 
     def to_tc_cell(self):
@@ -215,11 +214,14 @@ class Field(models.Model):
     class Meta():
         abstract = True
 
+
 class DataField(Field):
     pass
 
+
 class HeaderField(Field):
     pass
+
 
 class Validate(models.Model):
     tc = models.ForeignKey(RestApiTestCase, on_delete=True)
