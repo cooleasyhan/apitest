@@ -3,22 +3,22 @@ from locust import HttpLocust, TaskSet, task
 
 import os
 import sys
-
+import os
+import sys
+sys.path.insert(0, '{{ base_dir }}')
+os.environ.setdefault("DJANGO_SETTINGS_MODULE",
+                        "{{ default_django_settings_module }}")
+import django
+django.setup()
+from apitest.logger import setup_logger
+setup_logger('critical')
+from apimanager.models import RestApiTestCase
+APIS = [obj for obj in RestApiTestCase.objects.filter(
+            project__name="{{ project_name }}")]
 
 class WebPageTasks(TaskSet):
     def on_start(self):
-        import os
-        import sys
-        sys.path.insert(0, '{{ base_dir }}')
-        os.environ.setdefault("DJANGO_SETTINGS_MODULE",
-                              "{{ default_django_settings_module }}")
-        import django
-        django.setup()
-        from apitest.logger import setup_logger
-        setup_logger('critical')
-        from apimanager.models import RestApiTestCase
-        self.apis = [obj for obj in RestApiTestCase.objects.filter(
-            project__name=self.locust.project_name)]
+        self.apis = APIS
 
     @task
     def test_specified_scenario(self):
@@ -31,4 +31,4 @@ class WebPageUser(HttpLocust):
     task_set = WebPageTasks
     min_wait = {{ min_wait }}
     max_wait = {{ max_wait }}
-    project_name = "{{ project_name }}"
+
