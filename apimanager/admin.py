@@ -1,18 +1,20 @@
-from django.contrib import admin
-from .models import *
-from django.http import response
 import time
-from django.shortcuts import render_to_response
 from collections import Counter
-from .services import run_test
+
+from django.contrib import admin
+from django.http import response
+from django.shortcuts import render_to_response
 from rest_framework.authtoken.admin import TokenAdmin
+
+from .models import *
+from .services import run_test
 
 TokenAdmin.raw_id_fields = ('user',)
 
 
 @admin.register(Project)
 class ProjectAdmin(admin.ModelAdmin):
-    list_display = ('pk', '__str__','host')
+    list_display = ('pk', '__str__', 'host')
     list_filter = ()
     search_fields = ()
 
@@ -42,18 +44,20 @@ class ValidateAdmin(admin.TabularInline):
 
 @admin.register(RestApiTestCase)
 class RestApiTestCaseAdmin(admin.ModelAdmin):
-    list_display = ('name', 'project', 'real_url', 
+    list_display = ('name', 'project', 'real_url',
                     # 'data_disp', 'validate_disp',
                     #  'successed',
-                    'last_run_result')
-    list_filter = ()
+                    # 'last_run_result'
+                    )
+    actions_on_top = True
+    list_filter = ('project',)
     search_fields = ()
     inlines = [DataFieldAdmin, HeaderFieldAdmin, ValidateAdmin]
 
     suit_form_tabs = (('general', '主数据'), ('data', '数据'),
                       ('header', '头部'), ('validate', '校验'))
 
-    actions = ['run','copy']
+    actions = ['run', 'copy']
 
     def get_fieldsets(self, request, obj=None):
         return [(None, {'classes': ('suit-tab suit-tab-general',), 'fields': self.get_fields(request, obj)})]
@@ -66,7 +70,7 @@ class RestApiTestCaseAdmin(admin.ModelAdmin):
         for origin in queryset:
             new_one = RestApiTestCase.objects.get(pk=origin.pk)
             new_one.pk = None
-            new_one.name = origin.name + '_copy' 
+            new_one.name = origin.name + '_copy'
             new_one.save()
 
             for df in DataField.objects.filter(tc=origin):
@@ -83,4 +87,3 @@ class RestApiTestCaseAdmin(admin.ModelAdmin):
                 df.pk = None
                 df.tc = new_one
                 df.save()
-             
