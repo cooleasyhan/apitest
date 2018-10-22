@@ -6,16 +6,18 @@ import os
 import signal
 from multiprocessing import Manager, Process, current_process, managers
 from subprocess import Popen, TimeoutExpired, call
-from django.utils import timezone
+
 import requests
 from django.conf import settings
 # Create your models here.
 from django.contrib.auth.models import User
-from django.db import models
+from django.db import close_old_connections, models
+from django.db.models.deletion import CASCADE
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.forms import model_to_dict
 from django.template import loader
+from django.utils import timezone
 from jinja2 import Template
 from rest_framework.authtoken.models import Token
 
@@ -94,7 +96,7 @@ class Project(models.Model):
 
 class RestApiTestCase(models.Model):
     name = models.CharField(blank=False, max_length=100)
-    project = models.ForeignKey(Project, on_delete=True)
+    project = models.ForeignKey(Project, on_delete=CASCADE)
     url = models.CharField(blank=False, max_length=2000)
     method = models.CharField(max_length=20,
                               choices=(('GET', 'GET'), ('POST', 'POST'), ('OPTION', 'OPTION')))
@@ -189,6 +191,7 @@ class RestApiTestCase(models.Model):
         self.last_run_result = rst.resp_text
         log_debug('Validation Result: %s' % str(rst.validator_success))
         log_debug('Validation Result: %s' % str(rst.validators))
+        close_old_connections()
         self.save()
 
         return rst
@@ -202,7 +205,7 @@ class RestApiTestCase(models.Model):
 
 
 class Field(models.Model):
-    tc = models.ForeignKey(RestApiTestCase, on_delete=True)
+    tc = models.ForeignKey(RestApiTestCase, on_delete=CASCADE)
     name = models.CharField(max_length=200)
     data_type = models.CharField(max_length=20, choices=(
         ('int', 'int'), ('str', 'string'), ('boolean', 'boolean'), ('float', 'float'), ('jinja2', 'jinja2'), ('json', 'json')))
@@ -224,7 +227,7 @@ class HeaderField(Field):
 
 
 class Validate(models.Model):
-    tc = models.ForeignKey(RestApiTestCase, on_delete=True)
+    tc = models.ForeignKey(RestApiTestCase, on_delete=CASCADE)
     field_name = models.CharField(max_length=200)
     comparator = models.CharField(
         max_length=50, choices=comparators)
