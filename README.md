@@ -12,6 +12,7 @@
         - {{ f.token(v.source_system_code, v.token2, v.timestamp) }}
     - 根据row_cnt生成json串 
         - [{%for i in range(v.row_cnt)%}   {"name":"test"} {% if not loop.last %},  {%endif%} {%endfor%} ]
+    - 下划线开头的参数不会被传送，仅用于计算
 4. 支持结果检验
 5. 支持locust压测
 6. 提供http接口一键测试相应testcase  /api/run
@@ -20,14 +21,16 @@
 
 ## 截图
 
-### 项目管理
-![proj_edit](screenshort/proj_edit.jpeg)
-![proj_actions](screenshort/proj_actions.jpeg)
-
 ### 测试用例管理
 ![tc_edit](screenshort/tc_edit.jpeg)
+![tc_edit](screenshort/tc_edit2.jpeg)
 ![tc_actions](screenshort/tc_actions.jpeg)
 
 ### 用例结果展示
 ![tc_rpt1](screenshort/tc_rpt1.jpeg)
 ![tc_rpt2](screenshort/tc_rpt2.jpeg)
+
+### 项目管理
+![proj_edit](screenshort/proj_edit.jpeg)
+![proj_actions](screenshort/proj_actions.jpeg)
+ 
