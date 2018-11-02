@@ -13,11 +13,11 @@ coveralls = "*"
 [packages]
 django = "*"
 celery = "*"
-locust = "*"
 django-suit = "*"
 mysqlclient = "*"
 djangorestframework = "*"
 pycrypto = "==2.6.1"
+locustio = "*"
 
 [requires]
 python_version = "3.6"

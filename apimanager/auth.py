@@ -1,11 +1,11 @@
-from django.contrib.auth.models import User
-from rest_framework import authentication
-from rest_framework import exceptions
-from rest_framework.authtoken.models import Token
-from builtins import *
 import hashlib
 import time
+from builtins import *
+
 from django.conf import settings
+from django.contrib.auth.models import User
+from rest_framework import authentication, exceptions
+from rest_framework.authtoken.models import Token
 
 
 def cal_token(*args):
@@ -16,7 +16,7 @@ def cal_token(*args):
     return key
 
 
-class   TokenAuthentication(authentication.BaseAuthentication):
+class TokenAuthentication(authentication.BaseAuthentication):
     def authenticate(self, request):
         if request.method == 'GET':
             return
