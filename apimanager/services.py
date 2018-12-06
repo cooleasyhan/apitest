@@ -1,6 +1,7 @@
-import time
 import datetime
+import time
 from collections import Counter
+
 
 def run_test(tests):
     t = {}
@@ -34,7 +35,7 @@ def run_test(tests):
         record['meta_data']['encoding'] = tmp.resp_obj.encoding
         record['meta_data']['content_size'] = len(tmp.resp_obj.content)
 
-        record['validator'] = {'success':tmp.validator_success}
+        record['validator'] = {'success': tmp.validator_success}
         record['validator']['detail'] = []
         for validator in tmp.validators:
             record['validator']['detail'].append(validator.to_dict())

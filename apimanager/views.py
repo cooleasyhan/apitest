@@ -1,11 +1,9 @@
 
 
-from rest_framework.views import APIView
+from rest_framework import serializers, status
 from rest_framework.response import Response
-
-from rest_framework import status
-from rest_framework import serializers
 from rest_framework.validators import ValidationError
+from rest_framework.views import APIView
 
 from .models import Project, RestApiTestCase
 from .services import run_test
@@ -37,11 +35,9 @@ class APITestView(APIView):
             raise ValidationError(detail='Api Not Found')
 
         rst = run_test(tests)
-
         return Response(rst)
 
 
 class AuthView(APIView):
-    def post(self, request, format=None): 
-        return Response({"status":"ok"})
-    
+    def post(self, request, format=None):
+        return Response({"status": "ok"})
